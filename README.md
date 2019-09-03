@@ -16,3 +16,7 @@ Screenshots
 
 
 ![Image of Spotify Example](https://github.com/Stylistik/liri-node-app/blob/master/Spotify-example.png?raw=true)
+
+![Image of OMDB Example](https://github.com/Stylistik/liri-node-app/blob/master/OMDB-example.png?raw=true)
+
+![Image of Bands in town Exmaple](https://github.com/Stylistik/liri-node-app/blob/master/Bands-in-town-example.png?raw=true)
