@@ -1,45 +1,166 @@
+// DEPENDENCIES
+// =====================================
+// Read and set environment variables
 require("dotenv").config();
-var keys = require("./keys.js");
-var Spotify = require('node-spotify-api');
-var spotify = new Spotify(keys.spotify);
+
+// Import the node-spotify-api NPM package.
+var Spotify = require("node-spotify-api");
+
+// Import the API keys
+var keys = require("./keys");
+
+// Import the axios npm package.
 var axios = require("axios");
-// console.log("Hello World");
 
-// var argument = process.argv
-// console.log(argument);
+// Import the moment npm package.
+var moment = require("moment");
 
-var operation = process.argv[2];
+// Import the FS package for read/write.
+var fs = require("fs");
+
+// Initialize the spotify API client using our client id and secret
+var spotify = new Spotify(keys.spotify);
+
+// FUNCTIONS
+// =====================================
+
+// Helper function that gets the artist name
+var getArtistNames = function(artist) {
+  return artist.name;
+};
+//Create function for song name
+var getMeSpotify = function(songName) {
+  //if this song is undefined then  
+  if (!songName === undefined) {
+    //default is
+    songName = "What's my age again";
+  }
+//
+  spotify.search(
+    {
+      type: "track",
+      query: songName
+    },
+    function(err, data) {
+      if (err) {
+        console.log("Error occurred: " + err);
+        return;
+      }
+
+      var songs = data.tracks.items;
+
+      for (var i = 0; i < songs.length; i++) {
+        console.log(i);
+        console.log("artist(s): " + songs[i].artists.map(getArtistNames));
+        console.log("song name: " + songs[i].name);
+        console.log("preview song: " + songs[i].preview_url);
+        console.log("album: " + songs[i].album.name);
+        console.log("-----------------------------------");
+      }
+    }
+  );
+};
+//create function to get artist name
+var getMyBands = function(artist) {
+  var queryURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
 
 
+  axios.get(queryURL).then(
+    // 
+    function(response) {
+      // 
+      var BigData = response.data;
 
-function getMovieData() {
-    var movieName = process.argv[3];
-    console.log(movieName)
-    axios.get(`http://www.omdbapi.com/?t=${movieName}&apikey=7969af0b`).then(function(response){
-    console.log(response)
-    })
-    // console.log(movieData)
-}
-function getSpotifySong() {
-    var songName = process.argv[3];
-    console.log(songName)
-    spotify.search({ type: 'track', query: songName }, function(err, data) {
-        if (err) {
-          return console.log('Error occurred: ' + err);
-        }
-       
-      console.log(data.tracks.items[0]); 
-      });
-}
-if (operation==='movie-this'){
-    getMovieData()
+      if (!BigData) {
+        console.log("No results found for " + artist);
+        return;
+      }
 
-} else if(operation==='concert-this'){
-    console.log('concert-this requested')
-} else if (operation==='spotify-this-song'){
-    console.log('spotify requested')
-    getSpotifySong()
-} else if(operation==='do-what-it-says'){
-    console.log('do-what-it-says requested')
-}
- 
+      console.log("Upcoming concerts for " + artist + ":");
+
+      for (var i = 0; i < BigData.length; i++) {
+        var show = BigData[i];
+
+        console.log(
+          show.venue.city +
+            "," +
+            (show.venue.region || show.venue.country) +
+            " at " +
+            show.venue.name +
+            " " +
+            moment(show.datetime).format("MM/DD/YYYY")
+        );
+      }
+    }
+  );
+};
+
+// Function for running a Movie Search
+var getMeMovie = function(movieName) {
+  if (movieName === undefined) {
+    movieName = "Mr Nobody";
+  }
+
+  var urlHit =
+    "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=full&tomatoes=true&apikey=trilogy";
+
+  axios.get(urlHit).then(
+    function(response) {
+      var jsonData = response.data;
+
+      console.log("Title: " + jsonData.Title);
+      console.log("Year: " + jsonData.Year);
+      console.log("Rated: " + jsonData.Rated);
+      console.log("IMDB Rating: " + jsonData.imdbRating);
+      console.log("Country: " + jsonData.Country);
+      console.log("Language: " + jsonData.Language);
+      console.log("Plot: " + jsonData.Plot);
+      console.log("Actors: " + jsonData.Actors);
+      console.log("Rotten Tomatoes Rating: " + jsonData.Ratings[1].Value);
+    }
+  );
+};
+
+// Function for running a command based on text file
+var doWhatItSays = function() {
+  fs.readFile("random.txt", "utf8", function(error, data) {
+    console.log(data);
+
+    var dataArr = data.split(",");
+
+    if (dataArr.length === 2) {
+      pick(dataArr[0], dataArr[1]);
+    } else if (dataArr.length === 1) {
+      pick(dataArr[0]);
+    }
+  });
+};
+
+// Function for determining which command is executed
+var pick = function(caseData, functionData) {
+  switch (caseData) {
+  case "concert-this":
+    getMyBands(functionData);
+    break;
+  case "spotify-this-song":
+    getMeSpotify(functionData);
+    break;
+  case "movie-this":
+    getMeMovie(functionData);
+    break;
+  case "do-what-it-says":
+    doWhatItSays();
+    break;
+  default:
+    console.log("LIRI doesn't know that");
+  }
+};
+
+// Function which takes in command line arguments and executes correct function accordingly
+var runThis = function(argOne, argTwo) {
+  pick(argOne, argTwo);
+};
+
+// MAIN PROCESS
+// =====================================
+runThis(process.argv[2], process.argv.slice(3).join(" "));
