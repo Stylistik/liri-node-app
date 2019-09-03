@@ -9,3 +9,8 @@ You will need to provide environmental variables for your Bands in town, Spotify
 Video Demo 
 
 https://drive.google.com/file/d/14laz01y4LIViuJQ6Nv51tbxyYtWckUWv/view
+
+
+Screenshots 
+
+Spotify-example.png
